@@ -1,0 +1,33 @@
+name: Check Spelling
+on: push
+permissions:
+  contents: read
+jobs:
+  spelling-action:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: check-spelling/check-spelling@v0.0.24
+      with:
+        checkout: true
+  spelling-script:
+    strategy:
+      matrix:
+        platform: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+    - uses: actions/checkout@v4
+      with:
+        path: spelling
+        repository: check-spelling/check-spelling
+        ref: v0.0.24
+    - if: runner.os == 'macOS'
+      run: brew install cpanminus
+    - run: spelling/unknown-words.sh
+      env:
+        INPUTS: >-
+          {
+            "post_comment": 0
+          }
