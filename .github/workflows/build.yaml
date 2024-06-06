@@ -1,0 +1,15 @@
+name: Test containers
+
+on:
+    push
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        container:
+            image: alpine:edge
+            options: --platform linux/arm64/v8
+        steps:
+            - run: |
+                set -x
+                uname -a
