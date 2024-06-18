@@ -186,7 +186,6 @@ finally
 {
     try
     {
-        wsl.exe -u root killall tcpdump
         if ($tcpdumpProcess -ne $null)
         {
             Wait-Process -InputObject $tcpdumpProcess -Timeout 10
