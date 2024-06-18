@@ -10,13 +10,6 @@ jobs:
       run:
         shell: pwsh
     steps:
-    - name: Enable crash report collection
-      run: |
-        md C:\crashes
-        reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" /f
-        reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" /v DumpFolder /t REG_EXPAND_SZ /d C:\crashes /f
-        reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" /v DumpType /t REG_DWORD /d 2 /f
-
     - run: >-
         Get-Service -ErrorAction Continue -Name
         @('W3SVC', 'docker')
@@ -29,53 +22,15 @@ jobs:
         do {
           wsl --update
         } while ( -not $? )
-        do {
-          wsl --install --no-distribution
-        } while ( -not $? )
         wsl --set-default-version 2
-        wsl --shutdown
 
-    - name: "Windows: Ensure networking is running"
-      run: >-
-        Get-Service -Name @(
-        'Host Network Service',
-        'HV Host Service',
-        'LxssManager',
-        'Hyper-V Host Compute Service',
-        'Hyper-V Virtual Machine Management')
-        | Restart-Service
-
-    - uses: actions/checkout@v4
-
-    - name: Collect logs
-      shell: powershell
-      if: ${{ ! always() }}
-      run: |
-        Set-ExecutionPolicy Bypass -Scope Process -Force
-        # This is from commit 04c33779a4f9957df0fd9f862276e5787b4e6843
-        ./collect-networking-logs.ps1
-
-    - run: |
+        - run: |
         # Install Debian, but do not launch it
         curl.exe -O https://wsldownload.azureedge.net/TheDebianProject.DebianGNULinux_1.12.2.0_neutral___76v4gfsz19hv4.AppxBundle
         Add-AppxPackage *.AppxBundle
-        # wsl --install --no-launch debian
         # Initialize Debian, without going through any first-time setup
         debian.exe install --root
       shell: powershell
-
-    - run: |
-        # Actually run it
-        wsl -d Debian uname -a
-        wsl -d Debian cat /proc/mountinfo
-        wsl -d Debian env
-
-    - uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        path: |
-          C:\crashes
-          *.zip
 
     - run: >-
         wsl.exe -d Debian --exec /usr/bin/env DEBIAN_FRONTEND=noninteractive
