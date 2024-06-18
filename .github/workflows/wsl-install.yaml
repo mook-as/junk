@@ -26,8 +26,10 @@ jobs:
         # Sometimes this results in a HTTP 403 for some reason; in that case, we
         # need to retry.
         do {
-          wsl --install --no-distribution
           wsl --update
+        } while ( -not $? )
+        do {
+          wsl --install --no-distribution
         } while ( -not $? )
         wsl --set-default-version 2
         wsl --shutdown
