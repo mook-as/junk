@@ -19,7 +19,7 @@ jobs:
         } while ( -not $? )
         wsl --set-default-version 2
 
-    - run: wsl --install Debian --no-launch
+    - run: wsl --install Debian
 
     - run: |
         # Install Debian, but do not launch it
