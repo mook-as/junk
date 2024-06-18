@@ -49,6 +49,7 @@ jobs:
 
     - name: Collect logs
       shell: powershell
+      if: ${{ ! always() }}
       run: |
         Set-ExecutionPolicy Bypass -Scope Process -Force
         # This is from commit 04c33779a4f9957df0fd9f862276e5787b4e6843
@@ -56,7 +57,7 @@ jobs:
 
     - run: |
         # Install Debian, but do not launch it
-        wsl --install Debian --no-launch --web-download
+        winget install --id 9MSVKQC78PK6 --disable-interactivity --accept-source-agreements --accept-package-agreements
         # Initialize Debian, without going through any first-time setup
         debian.exe install --root
 
