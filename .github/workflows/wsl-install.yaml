@@ -9,6 +9,13 @@ jobs:
       run:
         shell: pwsh
     steps:
+    - name: Enable crash report collection
+      run: |
+        md C:\crashes
+        reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" /f
+        reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" /v DumpFolder /t REG_EXPAND_SZ /d C:\crashes /f
+        reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" /v DumpType /t REG_DWORD /d 2 /f
+
     - run: >-
         Get-Service -ErrorAction Continue -Name
         @('W3SVC', 'docker')
@@ -19,6 +26,7 @@ jobs:
         # Sometimes this results in a HTTP 403 for some reason; in that case, we
         # need to retry.
         do {
+          wsl --install --no-distribution
           wsl --update
         } while ( -not $? )
         wsl --set-default-version 2
@@ -33,13 +41,6 @@ jobs:
         'Hyper-V Host Compute Service',
         'Hyper-V Virtual Machine Management')
         | Restart-Service
-
-    - name: Enable crash report collection
-      run: |
-        md C:\crashes
-        reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" /f
-        reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" /v DumpFolder /t REG_EXPAND_SZ /d C:\crashes /f
-        reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" /v DumpType /t REG_DWORD /d 2 /f
 
     - run: |
         # Install Debian, but do not launch it
