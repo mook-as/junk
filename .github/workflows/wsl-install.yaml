@@ -1,0 +1,48 @@
+name: Install WSL
+on:
+  workflow_dispatch: {}
+  push: {}
+jobs:
+  install:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+    - run: >-
+        Get-Service -ErrorAction Continue -Name
+        @('W3SVC', 'docker')
+        | Stop-Service
+
+    - name: "Windows: Update any pre-installed WSL"
+      run: |
+        # Sometimes this results in a HTTP 403 for some reason; in that case, we
+        # need to retry.
+        do {
+          wsl --update
+        } while ( -not $? )
+
+    - name: "Windows: Finish setting up WSL"
+      run: |
+        wsl --set-default-version 2
+        wsl --shutdown
+
+    - name: "Windows: Ensure networking is running"
+      run: >-
+        Get-Service -Name @(
+        'Host Network Service',
+        'HV Host Service',
+        'LxssManager',
+        'Hyper-V Host Compute Service',
+        'Hyper-V Virtual Machine Management')
+        | Restart-Service -ErrorAction Continue
+
+    - run: |
+        # Install Debian, but do not launch it
+        wsl --install Debian --no-launch
+        # Initialize Debian, without going through any first-time setup
+        debian.exe install --root
+
+    - run: >-
+        wsl.exe -d Debian --exec /usr/bin/env DEBIAN_FRONTEND=noninteractive
+        sh -c 'apt-get update && apt-get install --yes coreutils curl'
