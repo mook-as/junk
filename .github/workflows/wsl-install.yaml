@@ -46,9 +46,9 @@ jobs:
         wsl --install Debian --no-launch --web-download
         # Initialize Debian, without going through any first-time setup
         debian.exe install --root
-      continue-on-error: true
 
     - uses: actions/upload-artifact@v4
+      if: always()
       with:
         path: C:\crashes
 
