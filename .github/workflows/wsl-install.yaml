@@ -62,6 +62,7 @@ jobs:
         # wsl --install --no-launch debian
         # Initialize Debian, without going through any first-time setup
         debian.exe install --root
+      shell: powershell
 
     - run: |
         # Actually run it
