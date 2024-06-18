@@ -24,7 +24,7 @@ jobs:
         } while ( -not $? )
         wsl --set-default-version 2
 
-        - run: |
+    - run: |
         # Install Debian, but do not launch it
         curl.exe -O https://wsldownload.azureedge.net/TheDebianProject.DebianGNULinux_1.12.2.0_neutral___76v4gfsz19hv4.AppxBundle
         Add-AppxPackage *.AppxBundle
