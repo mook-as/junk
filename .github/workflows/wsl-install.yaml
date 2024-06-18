@@ -35,7 +35,7 @@ jobs:
         'LxssManager',
         'Hyper-V Host Compute Service',
         'Hyper-V Virtual Machine Management')
-        | Restart-Service -ErrorAction Continue
+        | Restart-Service
 
     - run: |
         # Install Debian, but do not launch it
