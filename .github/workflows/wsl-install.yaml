@@ -8,13 +8,14 @@ jobs:
     runs-on: windows-latest
     defaults:
       run:
-        shell: pwsh
+        shell: powershell
     strategy:
       matrix:
         include:
         - mode: appx
         - mode: install
         - mode: install-no-launch
+      fail-fast: false
     steps:
     - uses: actions/checkout@v4
     - name: "Windows: Update any pre-installed WSL"
@@ -27,7 +28,6 @@ jobs:
         wsl --set-default-version 2
 
     - if: matrix.mode == 'appx'
-      shell: powershell
       run: |
         # Install Debian by downloading the .AppxBundle manually
         ./collect-networking-logs.ps1 {
