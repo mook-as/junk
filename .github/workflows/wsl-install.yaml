@@ -41,7 +41,7 @@ jobs:
           Add-AppxPackage Debian.AppxBundle
           debian.exe install --root
           wsl -d debian /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get update
-          wsl -d debian /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get install lsb-release
+          wsl -d debian /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get install --yes lsb-release
         }
 
     - if: matrix.mode == 'install'
