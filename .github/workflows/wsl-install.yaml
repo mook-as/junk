@@ -10,11 +10,6 @@ jobs:
       run:
         shell: pwsh
     steps:
-    - run: >-
-        Get-Service -ErrorAction Continue -Name
-        @('W3SVC', 'docker')
-        | Stop-Service
-
     - name: "Windows: Update any pre-installed WSL"
       run: |
         # Sometimes this results in a HTTP 403 for some reason; in that case, we
@@ -26,11 +21,14 @@ jobs:
 
     - run: |
         # Install Debian, but do not launch it
+
         curl.exe -O https://wsldownload.azureedge.net/TheDebianProject.DebianGNULinux_1.12.2.0_neutral___76v4gfsz19hv4.AppxBundle
         Add-AppxPackage *.AppxBundle
         # Initialize Debian, without going through any first-time setup
         debian.exe install --root
       shell: powershell
+    
+    - run: wsl --install Debian --no-launch
 
     - run: >-
         wsl.exe -d Debian --exec /usr/bin/env DEBIAN_FRONTEND=noninteractive
