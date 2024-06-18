@@ -40,6 +40,7 @@ jobs:
             % { Invoke-WebRequest $_ -OutFile Debian.AppxBundle }
           Add-AppxPackage Debian.AppxBundle
           debian.exe install --root
+          wsl -d debian /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get install lsb-release
         }
 
     - if: matrix.mode == 'install'
