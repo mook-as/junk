@@ -21,9 +21,6 @@ jobs:
         do {
           wsl --update
         } while ( -not $? )
-
-    - name: "Windows: Finish setting up WSL"
-      run: |
         wsl --set-default-version 2
         wsl --shutdown
 
@@ -39,7 +36,7 @@ jobs:
 
     - run: |
         # Install Debian, but do not launch it
-        wsl --install Debian --no-launch
+        wsl --install Debian --no-launch --web-download
         # Initialize Debian, without going through any first-time setup
         debian.exe install --root
 
