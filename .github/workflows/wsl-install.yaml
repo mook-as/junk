@@ -63,7 +63,9 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: always()
       with:
-        path: C:\crashes
+        path: |
+          C:\crashes
+          *.zip
 
     - run: >-
         wsl.exe -d Debian --exec /usr/bin/env DEBIAN_FRONTEND=noninteractive
