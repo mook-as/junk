@@ -34,11 +34,23 @@ jobs:
         'Hyper-V Virtual Machine Management')
         | Restart-Service
 
+    - name: Enable crash report collection
+      run: |
+        md C:\crashes
+        reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" /f
+        reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" /v DumpFolder /t REG_EXPAND_SZ /d C:\crashes /f
+        reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" /v DumpType /t REG_DWORD /d 2 /f
+
     - run: |
         # Install Debian, but do not launch it
         wsl --install Debian --no-launch --web-download
         # Initialize Debian, without going through any first-time setup
         debian.exe install --root
+      continue-on-error: true
+
+    - uses: actions/upload-artifact@v4
+      with:
+        path: C:\crashes
 
     - run: >-
         wsl.exe -d Debian --exec /usr/bin/env DEBIAN_FRONTEND=noninteractive
