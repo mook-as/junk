@@ -64,6 +64,10 @@ jobs:
         debian.exe install --root
       shell: powershell
 
+    - run: |
+        # Actually run it
+        wsl -d Debian pwd
+
     - uses: actions/upload-artifact@v4
       if: always()
       with:
