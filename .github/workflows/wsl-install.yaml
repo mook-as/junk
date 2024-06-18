@@ -9,7 +9,14 @@ jobs:
     defaults:
       run:
         shell: pwsh
+    strategy:
+      matrix:
+        include:
+        - mode: appx
+        - mode: install
+        - mode: install-no-launch
     steps:
+    - uses: actions/checkout@v4
     - name: "Windows: Update any pre-installed WSL"
       run: |
         # Sometimes this results in a HTTP 403 for some reason; in that case, we
@@ -19,17 +26,36 @@ jobs:
         } while ( -not $? )
         wsl --set-default-version 2
 
-    - run: wsl --install Debian
-
-    - run: |
-        # Install Debian, but do not launch it
-
-        curl.exe -O https://wsldownload.azureedge.net/TheDebianProject.DebianGNULinux_1.12.2.0_neutral___76v4gfsz19hv4.AppxBundle
-        Add-AppxPackage *.AppxBundle
-        # Initialize Debian, without going through any first-time setup
-        debian.exe install --root
+    - if: matrix.mode == 'appx'
       shell: powershell
+      run: |
+        # Install Debian by downloading the .AppxBundle manually
+        ./collect-networking-logs.ps1 {
+          Invoke-WebRequest https://github.com/microsoft/WSL/raw/master/distributions/DistributionInfo.json |
+            Select-Object -ExpandProperty Content |
+            ConvertFrom-JSON |
+            Select-Object -ExpandProperty Distributions |
+            Where-Object Name -EQ "Debian" |
+            Select-Object -ExpandProperty Amd64PackageUrl |
+            % { Invoke-WebRequest $_ -OutFile Debian.AppxBundle }
+          Add-AppxPackage Debian.AppxBundle
+          debian.exe install --root
+        }
+
+    - if: matrix.mode == 'install'
+      run: |
+        ./collect-networking-logs.ps1 { wsl --install Debian }
+
+    - if: matrix.mode == 'install-no-launch'
+      run: |
+        ./collect-networking-logs.ps1 { wsl --install --no-launch Debian }
     
     - run: >-
         wsl.exe -d Debian --exec /usr/bin/env DEBIAN_FRONTEND=noninteractive
         sh -c 'apt-get update && apt-get install --yes coreutils curl'
+
+    - if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        path: '*.zip'
+        name: ${{ matrix.mode }}.zip

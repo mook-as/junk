@@ -2,8 +2,10 @@
 
 [CmdletBinding()]
 Param (
-    [switch]$RestartWslReproMode = $false
-   )
+    [switch]$RestartWslReproMode = $false,
+    [Parameter(Mandatory, Position = 0)]
+    [ScriptBlock]$Command
+)
 
 function Collect-WindowsNetworkState {
 
@@ -14,103 +16,86 @@ function Collect-WindowsNetworkState {
     # Collect host networking state relevant for WSL
     # Using a try/catch for commands below, as some of them do not exist on all OS versions
 
-    try
-    {
-        Get-NetAdapter -includeHidden | select Name,ifIndex,NetLuid,InterfaceGuid,Status,MacAddress,MtuSize,InterfaceType,Hidden,HardwareInterface,ConnectorPresent,MediaType,PhysicalMediaType | Out-File -FilePath "$folder/Get-NetAdapter_$ReproStep.log" -Append
+    try {
+        Get-NetAdapter -includeHidden | select Name, ifIndex, NetLuid, InterfaceGuid, Status, MacAddress, MtuSize, InterfaceType, Hidden, HardwareInterface, ConnectorPresent, MediaType, PhysicalMediaType | Out-File -FilePath "$folder/Get-NetAdapter_$ReproStep.log" -Append
     }
     catch {}
 
-    try
-    {
+    try {
         & netsh nlm query all $folder/nlmquery_"$ReproStep".log
     }
     catch {}
 
-    try
-    {
+    try {
         Get-NetIPConfiguration -All -Detailed | Out-File -FilePath "$folder/Get-NetIPConfiguration_$ReproStep.log" -Append
     }
     catch {}
 
-    try
-    {
+    try {
         Get-NetRoute | Out-File -FilePath "$folder/Get-NetRoute_$ReproStep.log" -Append
     }
     catch {}
 
-    try
-    {
+    try {
         Get-NetFirewallHyperVVMCreator | Out-File -FilePath "$folder/Get-NetFirewallHyperVVMCreator_$ReproStep.log" -Append
     }
     catch {}
 
-    try
-    {
+    try {
         Get-NetFirewallHyperVVMSetting -PolicyStore ActiveStore | Out-File -FilePath "$folder/Get-NetFirewallHyperVVMSetting_ActiveStore_$ReproStep.log" -Append
     }
     catch {}
 
-    try
-    {
+    try {
         Get-NetFirewallHyperVProfile -PolicyStore ActiveStore | Out-File -FilePath "$folder/Get-NetFirewallHyperVProfile_ActiveStore_$ReproStep.log" -Append
     }
     catch {}
 
-    try
-    {
+    try {
         Get-NetFirewallHyperVRule -PolicyStore ActiveStore | Out-File -FilePath "$folder/Get-NetFirewallHyperVRule_ActiveStore_$ReproStep.log" -Append
     }
     catch {}
 
-    try
-    {
+    try {
         Get-NetFirewallRule -PolicyStore ActiveStore | Out-File -FilePath "$folder/Get-NetFirewallRule_ActiveStore_$ReproStep.log" -Append
     }
     catch {}
 
-    try
-    {
+    try {
         Get-NetFirewallProfile -PolicyStore ActiveStore | Out-File -FilePath "$folder/Get-NetFirewallProfile_ActiveStore_$ReproStep.log" -Append
     }
     catch {}
 
-    try
-    {
+    try {
         Get-NetFirewallHyperVPort | Out-File -FilePath "$folder/Get-NetFirewallHyperVPort_$ReproStep.log" -Append
     }
     catch {}
 
-    try
-    {
+    try {
         & hnsdiag.exe list all 2>&1 > $folder/hnsdiag_list_all_"$ReproStep".log
     }
     catch {}
 
-    try
-    {
+    try {
         & hnsdiag.exe list endpoints -df 2>&1 > $folder/hnsdiag_list_endpoints_"$ReproStep".log
     }
     catch {}
 
-    try
-    {
-        foreach ($port in Get-NetFirewallHyperVPort)
-        {
+    try {
+        foreach ($port in Get-NetFirewallHyperVPort) {
             & vfpctrl.exe /port $port.PortName /get-port-state 2>&1 > "$folder/vfp-port-$($port.PortName)-get-port-state_$ReproStep.log"
             & vfpctrl.exe /port $port.PortName /list-rule 2>&1 > "$folder/vfp-port-$($port.PortName)-list-rule_$ReproStep.log"
         }
     }
     catch {}
 
-    try
-    {
+    try {
         & vfpctrl.exe /list-vmswitch-port 2>&1 > $folder/vfpctrl_list_vmswitch_port_"$ReproStep".log
     }
     catch {}
 
-    try
-    {
-        Get-VMSwitch | select Name,Id,SwitchType | Out-File -FilePath "$folder/Get-VMSwitch_$ReproStep.log" -Append
+    try {
+        Get-VMSwitch | select Name, Id, SwitchType | Out-File -FilePath "$folder/Get-VMSwitch_$ReproStep.log" -Append
     }
     catch {}
 }
@@ -122,22 +107,18 @@ $logProfile = "$folder/wsl_networking.wprp"
 $networkingBashScript = "$folder/networking.sh"
 
 # Copy/Download supporting files
-if (Test-Path "$PSScriptRoot/wsl_networking.wprp")
-{
+if (Test-Path "$PSScriptRoot/wsl_networking.wprp") {
     Copy-Item "$PSScriptRoot/wsl_networking.wprp" $logProfile
 }
-else
-{
+else {
     Write-Host -ForegroundColor Yellow "wsl_networking.wprp not found in the current directory. Downloading it from GitHub."
     Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/microsoft/WSL/master/diagnostics/wsl_networking.wprp" -OutFile $logProfile
 }
 
-if (Test-Path "$PSScriptRoot/networking.sh")
-{
+if (Test-Path "$PSScriptRoot/networking.sh") {
     Copy-Item "$PSScriptRoot/networking.sh" $networkingBashScript
 }
-else
-{
+else {
     Write-Host -ForegroundColor Yellow "networking.sh not found in the current directory. Downloading it from GitHub."
     Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/microsoft/WSL/master/diagnostics/networking.sh" -OutFile $networkingBashScript
 }
@@ -146,8 +127,7 @@ else
 get-appxpackage MicrosoftCorporationII.WindowsSubsystemforLinux > $folder/appxpackage.txt
 
 $wslconfig = "$env:USERPROFILE/.wslconfig"
-if (Test-Path $wslconfig)
-{
+if (Test-Path $wslconfig) {
     Copy-Item $wslconfig $folder
 }
 
@@ -156,16 +136,14 @@ if (Test-Path $wslconfig)
 
 Collect-WindowsNetworkState "before_repro"
 
-if ($RestartWslReproMode)
-{
+if ($RestartWslReproMode) {
     # The WSL HNS network is created once per boot. Resetting it to collect network creation logs.
     # Note: The below HNS command applies only to WSL in NAT mode
-    Get-HnsNetwork | Where-Object {$_.Name -eq 'WSL' -Or $_.Name -eq 'WSL (Hyper-V firewall)'} | Remove-HnsNetwork
+    Get-HnsNetwork | Where-Object { $_.Name -eq 'WSL' -Or $_.Name -eq 'WSL (Hyper-V firewall)' } | Remove-HnsNetwork
 
     # Stop WSL.
     net.exe stop WslService
-    if(-not $?)
-    {
+    if (-not $?) {
         net.exe stop LxssManager
     }
 }
@@ -174,14 +152,12 @@ if ($RestartWslReproMode)
 $wprOutputLog = "$folder/wpr.txt"
 
 wpr.exe -start $logProfile -filemode 2>&1 >> $wprOutputLog
-if ($LastExitCode -Ne 0)
-{
+if ($LastExitCode -Ne 0) {
     Write-Host -ForegroundColor Yellow "Log collection failed to start (exit code: $LastExitCode), trying to reset it."
     wpr.exe -cancel 2>&1 >> $wprOutputLog
 
     wpr.exe -start $logProfile -filemode 2>&1 >> $wprOutputLog
-    if ($LastExitCode -Ne 0)
-    {
+    if ($LastExitCode -Ne 0) {
         Write-Host -ForegroundColor Red "Couldn't start log collection (exitCode: $LastExitCode)"
     }
 }
@@ -194,17 +170,15 @@ netsh wfp capture start file="$folder/wfpdiag.cab"
 
 # Start tcpdump. Using a try/catch as tcpdump might not be installed
 $tcpdumpProcess = $null
-try
-{
+try {
     $tcpdumpProcess = Start-Process wsl.exe -ArgumentList "-u root tcpdump -n -i any -e -vvv > $folder/tcpdump.log" -PassThru
 }
 catch {}
 
-try
-{
+try {
     Write-Host -NoNewLine -ForegroundColor Green "Log collection is running. Please reproduce the problem and press any key to save the logs."
 
-    Start-Process wsl.exe -ArgumentList "--install Debian --no-launch" -Wait
+    $Command.Invoke()
 
     Write-Host "`nSaving logs..."
 }
