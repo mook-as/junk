@@ -2,6 +2,7 @@ name: Install WSL
 on:
   workflow_dispatch: {}
   push: {}
+permissions: {}
 jobs:
   install:
     runs-on: windows-latest
@@ -44,11 +45,13 @@ jobs:
         'Hyper-V Virtual Machine Management')
         | Restart-Service
 
+    - uses: actions/checkout@v4
+
     - name: Collect logs
       shell: powershell
       run: |
-        Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/microsoft/WSL/master/diagnostics/collect-networking-logs.ps1" -OutFile collect-networking-logs.ps1
         Set-ExecutionPolicy Bypass -Scope Process -Force
+        # This is from commit 04c33779a4f9957df0fd9f862276e5787b4e6843
         ./collect-networking-logs.ps1
 
     - run: |
