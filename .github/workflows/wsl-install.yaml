@@ -45,6 +45,7 @@ jobs:
         | Restart-Service
 
     - name: Collect logs
+      shell: powershell
       run: |
         Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/microsoft/WSL/master/diagnostics/collect-networking-logs.ps1" -OutFile collect-networking-logs.ps1
         Set-ExecutionPolicy Bypass -Scope Process -Force
