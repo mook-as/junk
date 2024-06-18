@@ -44,6 +44,12 @@ jobs:
         'Hyper-V Virtual Machine Management')
         | Restart-Service
 
+    - name: Collect logs
+      run: |
+        Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/microsoft/WSL/master/diagnostics/collect-networking-logs.ps1" -OutFile collect-networking-logs.ps1
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        ./collect-networking-logs.ps1
+
     - run: |
         # Install Debian, but do not launch it
         wsl --install Debian --no-launch --web-download
