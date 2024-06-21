@@ -1,0 +1,46 @@
+name: Trigger test
+on:
+  workflow_dispatch:
+    inputs:
+      owner:
+        description: Override owner (e.g. rancher-sandbox)
+        type: string
+      repo:
+        description: Override repository (e.g. rancher-desktop)
+        type: string
+      branch:
+        description: Override branch (e.g. main, or PR#)
+        type: string
+      tests:
+        description: 'Tests (in the tests/ directory, e.g. "containers")'
+        default: '*'
+        type: string
+      platforms:
+        description: Platforms to run
+        default: 'linux mac win'
+        type: string
+      engines:
+        description: Container engines to run
+        default: 'containerd moby'
+        type: string
+      package-id:
+        description: Package run ID override; leave empty to use latest.
+        default: ''
+        type: string
+      rd-use-networking-tunnel:
+        description: Use networking tunnel (on Windows)
+        default: true
+        type: boolean
+  push:
+  schedule:
+  - cron: '0 8 * * 1-5' # 8AM UTC weekdays as a baseline
+permissions: {}
+jobs:
+  run:
+    runs-on: windows-latest
+    steps:
+    - shell: bash
+      run: echo "${FOO} | ${RAW}"
+      env:
+        FOO: ${{ format('{0}', inputs.rd-use-networking-tunnel) != 'false' }}
+        RAW: ${{ inputs.rd-use-networking-tunnel }}
