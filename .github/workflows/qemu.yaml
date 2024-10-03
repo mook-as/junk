@@ -1,0 +1,89 @@
+name: qemu
+on: [ push ]
+jobs:
+  macos:
+    runs-on: macos-14
+    steps:
+    - run: |
+        mkdir build
+        brew install ninja
+    - uses: actions/checkout@v4
+      with:
+        repository: qemu/qemu
+        ref: v9.1.0
+        path: qemu
+        # We don't need all of the submodules, so let `configure` check them out.
+    - run: >-
+        ../qemu/configure
+        --target-list=aarch64-softmmu
+        --prefix=${{ github.workspace }}/install
+        --disable-auth-pam
+        --disable-bochs
+        --disable-capstone
+        --disable-cloop
+        --disable-cocoa
+        --disable-coreaudio
+        --disable-curl
+        --disable-curses
+        --disable-dbus-display
+        --disable-dmg
+        --disable-gcrypt
+        --disable-gettext
+        --disable-gnutls
+        --disable-iconv
+        --disable-libssh
+        --disable-libusb
+        --disable-nettle
+        --disable-parallels
+        --disable-pixman
+        --disable-png
+        --disable-qcow1
+        --disable-qed
+        --disable-replication
+        --disable-sdl
+        --disable-slirp
+        --disable-spice-protocol
+        --disable-vdi
+        --disable-vhdx
+        --disable-vmdk
+        --disable-vnc-jpeg
+        --disable-vpc
+        --disable-vvfat
+        --disable-zstd
+      working-directory: build
+    - run: ninja
+      working-directory: build
+    - run: make install
+      working-directory: build
+    - run: |
+        set -o errexit -o nounset -o xtrace
+        # Remove excess binaries
+        rm -f bin/qemu-edid bin/qemu-io qemu-nbd qemu-storage-daemon
+        # Remove unused dev dependencies
+        rm -r include lib
+        # Remove icons
+        rm -r share/applications share/icons
+        # Fix up dependencies
+        declare -A packages
+        for binary in qemu-img qemu-system-aarch64; do
+          first_edit=true
+          while read library; do
+            read package file < <(echo "$library" | awk -F/ '{ print $5 " " $7 }')
+            packages[$package]=true
+            # `install_name_tool` warns about code signature, but running
+            # `codesign --remove-signature` breaks the executable in a way that
+            # `install_name_tool` no longer works with it.  Just ignore the
+            # warning.
+            if $first_edit; then
+              install_name_tool -add_rpath @executable_path/../
+              first_edit=false
+            fi
+            install_name_tool -change "$library" "@rpath/$package/lib/$file"
+            otool -L "$(brew --prefix "$package")/lib/"
+          done < <(otool -L "bin/$binary" | awk '/homebrew/ { print $1 }')
+        done
+      working-directory: install
+    - uses: actions/upload-artifact@v4
+      with:
+        path: install
+        if-no-files-found: error
