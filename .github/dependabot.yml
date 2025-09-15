@@ -1,0 +1,12 @@
+version: 2
+updates:
+
+# Maintain dependencies for npm
+- package-ecosystem: "npm"
+  directory: "/"
+  schedule:
+    interval: "daily"
+  cooldown:
+    default-days: 7
+  open-pull-requests-limit: 12
+  labels: ["component/dependencies"]
