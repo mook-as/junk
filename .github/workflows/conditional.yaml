@@ -1,0 +1,16 @@
+on:
+  workflow_dispatch:
+    inputs:
+      condition:
+        description: This is a checkbox
+        type: boolean
+        default: false
+permissions: {}
+jobs:
+  conditional:
+    runs-on: ubuntu-latest
+    steps:
+    - if: inputs.condition == 'true'
+      run: echo "Condition is true"
+    - if: inputs.condition != true
+      run: echo "Condition is false"
