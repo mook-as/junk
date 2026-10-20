@@ -1,16 +1,23 @@
 on:
-  workflow_dispatch:
-    inputs:
-      condition:
-        description: This is a checkbox
-        type: boolean
-        default: false
+  push
 permissions: {}
 jobs:
-  conditional:
-    runs-on: ubuntu-latest
+  test-compilers:
+    runs-on: windows-11-arm
     steps:
-    - if: inputs.condition == 'true'
-      run: echo "Condition is true"
-    - if: inputs.condition != true
-      run: echo "Condition is false"
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      with:
+        go-version-file: go.mod
+    - shell: C:\shells\msys2bash.cmd {0}
+      run: |
+        set -o xtrace +o errexit
+        pacman --sync --noconfirm mingw-w64-clang-aarch64-clang
+        which clang
+        clang --version
+        clang -dumpmachine
+        cygpath -w $(which clang)
+        echo "CC=$(cygpath -w $(which clang))" >> "${GITHUB_ENV}"
+    - run: go build -o main.exe main.go
+      shell: bash
+    - run: ./main.exe
